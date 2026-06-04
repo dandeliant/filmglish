@@ -283,24 +283,33 @@ function initFragment(id,start,end){
 $('btn-replay').onclick=playFragment;
 
 /* ---------- Quiz flow ---------- */
-let cur=null,curOpts=[],selIdx=-1,usedHint=false,answered=false;
+let cur=null,curOpts=[],selIdx=-1,usedHint=false,answered=false,openMode=false;
+function hasQuiz(card){return card&&Array.isArray(card.options)&&card.options.length>=2;}
 function shuffledOpts(card){
-  const a=card.options.map((text,i)=>({text,correct:i===card.correct}));
+  const a=card.options.map((text,i)=>({text,correct:i===(card.correct||0)}));
   for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
 }
 function nextQuestion(){
   if(!deck.length)return;
   cur=deck[Math.floor(Math.random()*deck.length)];
-  curOpts=shuffledOpts(cur);selIdx=-1;usedHint=false;answered=false;
+  openMode=!hasQuiz(cur);
+  curOpts=openMode?[]:shuffledOpts(cur);selIdx=-1;usedHint=false;answered=false;
   renderTurn();
   $('qMode').textContent=cur.mode||'Quiz';
   $('qLevel').textContent=cur.level||'';
-  $('gapLine').innerHTML=esc(cur.prompt).replace(/___/g,'<span style="color:#8fb0ff">______</span>');
+  $('gapLine').innerHTML=esc(cur.prompt||cur.title||'').replace(/___/g,'<span style="color:#8fb0ff">______</span>');
   $('reveal').innerHTML='';
-  $('btn-check').style.display='block';$('btn-check').disabled=false;
-  $('btn-hint').style.display='block';$('btn-hint').disabled=false;$('btn-hint').textContent='💡 Podpowiedź (potem max +1)';
   $('btn-next').style.display='none';
+  $('btn-check').style.display='block';$('btn-check').disabled=false;
+  if(openMode){
+    $('opts').innerHTML='';
+    $('btn-hint').style.display='none';
+    $('btn-check').textContent='👁 Pokaż odpowiedź';
+  }else{
+    $('btn-check').textContent='✓ Sprawdź odpowiedź';
+    $('btn-hint').style.display='block';$('btn-hint').disabled=false;$('btn-hint').textContent='💡 Podpowiedź (potem max +1)';
+  }
   // film
   const fw=$('filmWrap');
   clearInterval(ytWatch);setFragState('');
@@ -309,7 +318,13 @@ function nextQuestion(){
     ensureYT(()=>initFragment(yt.id,cur.start||yt.t||0,(cur.end!=null&&cur.end!=='')?cur.end:null));
   }else{fw.className='player noFilm';fw.innerHTML='🎬 Film zostanie dodany wkrótce — na razie zgadnij z tekstu.';
     $('btn-replay').style.display='none';}
-  renderOpts();
+  if(!openMode)renderOpts();
+}
+function applyManual(moves){
+  const p=activePlayer();
+  if(p){p.pos=Math.min(FIELDS,p.pos+moves);turn=(turn+1)%players.length;saveState();renderPlayers();renderBoard();renderTurn();}
+  document.querySelectorAll('#manualBtns button').forEach(b=>b.disabled=true);
+  $('btn-next').style.display='block';
 }
 function renderOpts(){
   const el=$('opts');el.innerHTML='';
@@ -333,6 +348,27 @@ $('btn-hint').onclick=()=>{
 };
 $('btn-check').onclick=()=>{
   if(answered)return;
+  if(openMode){
+    answered=true; $('btn-check').disabled=true;
+    let manual='';
+    if(players.length){
+      manual=`<div id="manualBtns" style="margin-top:10px">
+        <div class="muted" style="margin-bottom:4px">Oceń odpowiedź gracza <b>${esc(activePlayer().name)}</b>:</div>
+        <div class="row">
+          <button class="inline" style="background:#1f8f5f" onclick="applyManual(3)">✓ Dobrze +3</button>
+          <button class="inline secondary" onclick="applyManual(1)">💡 Z podpowiedzią +1</button>
+          <button class="inline secondary" onclick="applyManual(0)">✗ Źle 0</button>
+        </div></div>`;
+    }
+    $('reveal').innerHTML=`<div class="reveal">
+      <div><b>Rozwiązanie</b></div>
+      ${cur.answer?`<div style="margin-top:6px">✅ ${esc(cur.answer)}</div>`:''}
+      ${cur.line?`<div style="margin-top:4px">📝 ${esc(cur.line)}</div>`:''}
+      ${cur.title?`<div style="margin-top:6px">🎬 ${esc(cur.title)}</div>`:''}
+    </div>`+manual;
+    if(!players.length)$('btn-next').style.display='block';
+    return;
+  }
   if(selIdx<0){alert('Wybierz odpowiedź A/B/C/D.');return;}
   answered=true;
   const correct=curOpts[selIdx].correct;
