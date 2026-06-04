@@ -63,6 +63,12 @@
   select{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0c0f1f;
     color:var(--text);font-size:15px;font-weight:600}
   .setup label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted);font-weight:700;flex:1}
+  .standings{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+  .st{display:flex;align-items:center;gap:8px;font-size:12px}
+  .st .nm{flex:0 0 72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+  .st .bar{flex:1;height:9px;border-radius:6px;background:#0c0f1f;overflow:hidden;border:1px solid var(--line)}
+  .st .fill{height:100%;border-radius:6px;transition:width .4s ease}
+  .st .pos{flex:0 0 44px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
   /* players list */
   .plist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
   .pl{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);
@@ -119,6 +125,7 @@
   <section class="view active" id="view-quiz">
     <div class="panel">
       <div class="turn" id="turnBar"><span class="muted">Tryb solo — dodaj graczy w zakładce „Plansza”, aby liczyć punkty.</span></div>
+      <div class="standings" id="standings"></div>
     </div>
 
     <div class="panel setup">
@@ -233,9 +240,34 @@ function parseYouTube(url){
 }
 
 /* ---------- Players / state ---------- */
-let players=[]; let turn=0;
+let players=[]; let turn=0; let lastWinner=null;
 try{const s=JSON.parse(localStorage.getItem('fg-game-state'));
   if(s&&Array.isArray(s.players)){players=s.players;turn=s.turn||0;}}catch(e){}
+lastWinner=(players.find(p=>p.pos>=FIELDS)||{}).name||null; // nie zapowiadaj ponownie po odświeżeniu
+
+/* ---------- Dźwięk zwycięstwa ---------- */
+let audioCtx=null;
+function beep(freq,start,dur,type){
+  try{
+    if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type=type||'triangle';o.frequency.value=freq;o.connect(g);g.connect(audioCtx.destination);
+    const t=audioCtx.currentTime+start;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.35,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.start(t);o.stop(t+dur);
+  }catch(e){}
+}
+function fanfare(){ [523.25,659.25,783.99,1046.5].forEach((f,i)=>beep(f,i*0.16,0.32,'triangle')); }
+function announceWinner(name){
+  fanfare();
+  try{ if(window.speechSynthesis){
+    const u=new SpeechSynthesisUtterance(name+' wygrywa!');
+    u.lang='pl-PL'; u.rate=1; u.pitch=1.1;
+    speechSynthesis.cancel(); setTimeout(()=>speechSynthesis.speak(u),700);
+  }}catch(e){}
+}
 function saveState(){localStorage.setItem('fg-game-state',JSON.stringify({players,turn}));}
 function activePlayer(){return players[turn]||null;}
 
@@ -290,7 +322,21 @@ function renderBoard(){
     lg.appendChild(s);
   });
   const w=players.find(p=>p.pos>=FIELDS);
-  if(w){$('winner').textContent='🏆 '+w.name+' wygrywa!';$('winner').style.display='block';}
+  if(w){
+    $('winner').textContent='🏆 '+w.name+' wygrywa!';$('winner').style.display='block';
+    if(lastWinner!==w.name){lastWinner=w.name;announceWinner(w.name);}
+  }else{$('winner').style.display='none';lastWinner=null;}
+  renderStandings();
+}
+function renderStandings(){
+  const el=$('standings');if(!el)return;
+  if(!players.length){el.innerHTML='';return;}
+  el.innerHTML=players.map((p,i)=>{
+    const pct=Math.min(100,Math.round(p.pos/FIELDS*100));
+    return `<div class="st"><span class="nm" style="color:${p.color}">${esc(p.name)}</span>`
+      +`<span class="bar"><span class="fill" style="width:${pct}%;background:${p.color}"></span></span>`
+      +`<span class="pos">${p.pos}/${FIELDS}</span></div>`;
+  }).join('');
 }
 
 /* ---------- YouTube fragment player ---------- */

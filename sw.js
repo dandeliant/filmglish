@@ -1,5 +1,5 @@
 /* Filmglish — service worker (PWA) */
-const CACHE = 'filmglish-v6';
+const CACHE = 'filmglish-v7';
 const ASSETS = [
   './',
   'index.html',
