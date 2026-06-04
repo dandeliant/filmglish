@@ -1,10 +1,9 @@
 /* Filmglish — service worker (PWA) */
-const CACHE = 'filmglish-v2';
+const CACHE = 'filmglish-v3';
 const ASSETS = [
   './',
   'index.html',
   'player.html',
-  'admin.html',
   'landing.html',
   'manifest.webmanifest',
   'icon-192.png',

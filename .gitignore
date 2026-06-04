@@ -1,3 +1,6 @@
 .claude/
 Thumbs.db
 .DS_Store
+
+# Generator nauczyciela — wyłącznie lokalnie, nie publikować
+admin.html
