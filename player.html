@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Filmglish — Gracz (od Angielskiwnet)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235b8cff'/%3E%3Cg fill='%23fff'%3E%3Crect x='11' y='14' width='5' height='6' rx='1' opacity='.6'/%3E%3Crect x='11' y='29' width='5' height='6' rx='1' opacity='.6'/%3E%3Crect x='11' y='44' width='5' height='6' rx='1' opacity='.6'/%3E%3Cpath d='M27 20 L47 32 L27 44 Z'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#5b8cff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Filmglish">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{--bg:#0f1226;--panel:#1a1f3a;--panel2:#232a4d;--accent:#5b8cff;--accent2:#ff5b8c;
+    --text:#e8ecff;--muted:#9aa3c7;--ok:#33d18f;--line:#2c345e}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.5}
+  header{padding:16px 18px;background:linear-gradient(135deg,#1a1f3a,#2a1f45);
+    border-bottom:1px solid var(--line);text-align:center}
+  header h1{margin:0;font-size:19px}
+  header p{margin:4px 0 0;color:var(--muted);font-size:12px}
+  .brand{display:inline-flex;align-items:center;gap:12px}
+  .brand-logo{flex:0 0 44px;width:44px;height:44px;display:inline-flex;
+    filter:drop-shadow(0 4px 12px rgba(91,140,255,.45))}
+  .brand-name{margin:0;font-size:26px;font-weight:800;letter-spacing:.3px;line-height:1;
+    background:linear-gradient(135deg,#8fb0ff 0%,#ff8fb0 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  main{padding:16px;max-width:680px;margin:0 auto}
+  .view{display:none} .view.active{display:block}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+  button{cursor:pointer;border:none;border-radius:12px;padding:14px 18px;font-size:15px;
+    font-weight:600;background:var(--accent);color:#fff;width:100%;margin-top:8px}
+  button.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--text)}
+  button.inline{width:auto;margin-top:0}
+  .muted{color:var(--muted);font-size:13px}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px}
+  #reader{width:100%;max-width:420px;margin:12px auto;border-radius:14px;overflow:hidden}
+  .player{position:relative;width:100%;padding-bottom:56.25%;height:0;border-radius:14px;overflow:hidden;background:#000;margin-top:10px}
+  .player iframe,.player>div{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+  .badge{display:inline-block;background:var(--ok);color:#04210f;font-weight:700;padding:5px 14px;border-radius:20px;font-size:13px}
+  .badge.warn{background:var(--accent2);color:#fff}
+  h2{margin:10px 0 4px;font-size:20px}
+  .task{font-size:17px;margin:6px 0}
+  details{margin-top:12px} summary{cursor:pointer}
+  .center{text-align:center}
+  .big{font-size:17px;padding:16px}
+  .logo{font-size:40px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="brand-logo">
+      <svg viewBox="0 0 64 64" width="44" height="44" aria-hidden="true">
+        <defs><linearGradient id="fgLogo" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#5b8cff"/><stop offset="1" stop-color="#ff5b8c"/>
+        </linearGradient></defs>
+        <rect x="3" y="3" width="58" height="58" rx="16" fill="url(#fgLogo)"/>
+        <g fill="#fff">
+          <rect x="11" y="14" width="5" height="6" rx="1" opacity=".6"/>
+          <rect x="11" y="29" width="5" height="6" rx="1" opacity=".6"/>
+          <rect x="11" y="44" width="5" height="6" rx="1" opacity=".6"/>
+          <path d="M27 20 L47 32 L27 44 Z"/>
+        </g>
+      </svg>
+    </span>
+    <h1 class="brand-name">Filmglish</h1>
+  </div>
+  <p>od Angielskiwnet · Scan a card · watch the clip · speak English!</p>
+</header>
+<main>
+  <!-- HOME / SCANNER -->
+  <section class="view active" id="home">
+    <div class="panel center">
+      <div class="logo">📷</div>
+      <p class="task">Zeskanuj kod QR z karty</p>
+      <button id="btn-startscan" class="big">📷 Włącz kamerę i skanuj</button>
+      <button id="btn-stopscan" class="secondary" style="display:none">⏹️ Zatrzymaj kamerę</button>
+      <div id="reader"></div>
+      <div id="filereader" style="display:none"></div>
+      <button id="btn-uploadqr" class="secondary">🖼️ Wgraj zdjęcie kodu QR</button>
+      <button id="btn-paste" class="secondary">📋 Wklej ze schowka</button>
+      <input type="file" id="qrFile" accept="image/*" style="display:none">
+      <p class="hint">Nie masz kamery? Wgraj zdjęcie/zrzut kodu QR albo wklej obraz (Ctrl+V).</p>
+    </div>
+    <div id="homeMsg"></div>
+  </section>
+
+  <!-- PLAYER -->
+  <section class="view" id="play">
+    <div class="panel">
+      <div id="playMeta"></div>
+      <h2 id="playTitle"></h2>
+      <p class="task" id="playTask"></p>
+      <div class="player"><div id="ytplayer"></div></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
+        <button id="btn-replay" class="inline">🔁 Odtwórz fragment</button>
+        <span id="fragState" class="muted"></span>
+      </div>
+      <div id="answerBox"></div>
+      <button id="btn-back" class="secondary">📷 Skanuj następną kartę</button>
+    </div>
+  </section>
+</main>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+
+/* ---- YouTube parsing ---- */
+function parseYouTube(url){
+  if(!url) return null;
+  let id=null,t=0;
+  try{
+    const u=new URL(url.trim());
+    if(u.hostname.includes('youtu.be')) id=u.pathname.slice(1);
+    else if(u.searchParams.get('v')) id=u.searchParams.get('v');
+    else{const m=u.pathname.match(/\/(embed|shorts)\/([^/?]+)/);if(m)id=m[2];}
+    const tp=u.searchParams.get('t')||u.searchParams.get('start');
+    if(tp) t=parseInt(tp)||0;
+  }catch(e){
+    const m=url.match(/[?&]v=([^&]+)/)||url.match(/youtu\.be\/([^?&]+)/);
+    if(m) id=m[1];
+  }
+  return id?{id,t}:null;
+}
+function fmt(t){t=Math.max(0,Math.round(t));const m=Math.floor(t/60),s=t%60;return m+':'+String(s).padStart(2,'0');}
+
+/* ---- Optional deck (to enrich plain YouTube QR) ---- */
+let deck=[];
+try{deck=JSON.parse(localStorage.getItem('eh-player-deck'))||[]}catch(e){deck=[]}
+
+/* ---- Views ---- */
+function show(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $(view).classList.add('active');
+}
+
+/* ============ PLAYER (YouTube IFrame API) ============ */
+let ytPlayer=null,ytReady=false,ytQueue=[],ytWatch=null,ytLoading=false;
+let fragStart=0,fragEnd=null,lastFrag={id:null,start:0,end:null};
+function ensureYT(cb){
+  if(ytReady){cb();return;}
+  ytQueue.push(cb);
+  if(ytLoading)return; ytLoading=true;
+  window.onYouTubeIframeAPIReady=()=>{ytReady=true;ytQueue.forEach(f=>f());ytQueue=[];};
+  const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+}
+function setFragState(s){const el=$('fragState');if(el)el.textContent=s;}
+function armWatch(start,end){
+  fragStart=start;fragEnd=end;clearInterval(ytWatch);setFragState('▶ odtwarzanie…');
+  if(end!=null){
+    ytWatch=setInterval(()=>{
+      if(!ytPlayer||!ytPlayer.getCurrentTime)return;
+      if(ytPlayer.getCurrentTime()>=end){try{ytPlayer.pauseVideo();}catch(e){}
+        clearInterval(ytWatch);setFragState('✓ koniec fragmentu');}
+    },200);
+  }
+}
+function playFragment(){
+  if(!ytPlayer)return;
+  try{ytPlayer.seekTo(fragStart,true);ytPlayer.playVideo();}catch(e){}
+  armWatch(fragStart,fragEnd);
+}
+function initFragment(id,start,end){
+  clearInterval(ytWatch);lastFrag={id,start,end};
+  if(ytPlayer){try{ytPlayer.destroy();}catch(e){}ytPlayer=null;}
+  const vars={start:Math.floor(start),autoplay:1,rel:0,controls:1,modestbranding:1,playsinline:1};
+  if(end!=null)vars.end=Math.floor(end);
+  if(location.protocol.startsWith('http'))vars.origin=location.origin;
+  ytPlayer=new YT.Player('ytplayer',{
+    width:'100%',height:'100%',videoId:id,host:'https://www.youtube.com',playerVars:vars,
+    events:{onReady:()=>armWatch(start,end),
+      onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)setFragState('✓ koniec fragmentu');},
+      onError:e=>playerError(e.data)}
+  });
+}
+function playerError(code){
+  clearInterval(ytWatch);
+  const t=Math.floor(lastFrag.start||0);
+  const link=`https://www.youtube.com/watch?v=${lastFrag.id}`+(t?`&t=${t}s`:'');
+  const fileNote=location.protocol==='file:'
+    ?'<p class="muted">Przyczyna: plik otwarty z dysku (file://). Udostępnij aplikację przez internet (http/https), aby grało tutaj.</p>':'';
+  setFragState('');
+  $('answerBox').innerHTML=`<p><span class="badge warn">⚠ Błąd odtwarzacza (${code})</span></p>${fileNote}
+    <button onclick="window.open('${link}','_blank')">▶ Otwórz na YouTube (od ${fmt(t)})</button>`;
+}
+
+/* ============ Show a card ============ */
+function playCard(c){
+  show('play');
+  const yt=parseYouTube(c.url||('https://youtu.be/'+c.v));
+  const id=c.v||(yt&&yt.id);
+  const start=(c.start!=null?c.start:(yt?yt.t:0))||0;
+  const end=(c.end!=null&&c.end!=='')?c.end:null;
+  $('playMeta').innerHTML=`<span class="badge">▶ ${esc(c.mode||'Clip')}${c.level?' · '+esc(c.level):''}</span>`;
+  $('playTitle').textContent=c.title||'YouTube clip';
+  $('playTask').textContent=c.task||'Watch the clip and speak in English!';
+  $('answerBox').innerHTML=c.answer
+    ?`<details><summary class="muted">Pokaż klucz / odpowiedź</summary><p>${esc(c.answer)}</p></details>`:'';
+  $('fragState').textContent='';
+  $('btn-replay').textContent=end!=null?`🔁 Odtwórz fragment (${fmt(start)} – ${fmt(end)})`:`🔁 Odtwórz fragment (od ${fmt(start)})`;
+  $('btn-replay').onclick=playFragment;
+  if(!id){$('answerBox').innerHTML='<p class="muted">Brak poprawnego linku YouTube w kodzie.</p>';return;}
+  ensureYT(()=>initFragment(id,start,end));
+}
+function esc(s){return(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+
+/* ============ Interpret scanned / hash content ============ */
+function parseParams(str){
+  // str like "v=ID&s=0&e=12&ti=...&t=...&m=...&l=...&a=..."
+  const p={};str.replace(/^#/,'').split('&').forEach(kv=>{
+    const i=kv.indexOf('=');if(i<0)return;
+    p[kv.slice(0,i)]=decodeURIComponent(kv.slice(i+1).replace(/\+/g,' '));
+  });return p;
+}
+function cardFromParams(p){
+  return {v:p.v,start:p.s?parseInt(p.s):0,end:(p.e!==undefined&&p.e!=='')?parseInt(p.e):null,
+    title:p.ti||'',task:p.t||'',mode:p.m||'',level:p.l||'',answer:p.a||''};
+}
+function handleContent(txt){
+  if(!txt){showHome('Pusty kod.');return;}
+  // 1) Link do tej aplikacji z parametrami (#v=...)
+  const hashIdx=txt.indexOf('#');
+  if(hashIdx>=0 && /(?:^|#).*\bv=/.test(txt.slice(hashIdx))){
+    const p=parseParams(txt.slice(hashIdx));
+    if(p.v){playCard(cardFromParams(p));return;}
+  }
+  // 2) Zwykły link YouTube — spróbuj wzbogacić z wczytanej talii
+  const yt=parseYouTube(txt);
+  if(yt){
+    const match=deck.find(c=>{const y=parseYouTube(c.url);return y&&y.id===yt.id;});
+    if(match){playCard(match);return;}
+    playCard({v:yt.id,start:yt.t||0,end:null,title:'YouTube clip',task:'Watch the clip and speak in English!'});
+    return;
+  }
+  // 3) Coś innego
+  showHome('Ten kod nie zawiera linku do filmu: <a style="color:var(--accent)" href="'+esc(txt)+'" target="_blank">'+esc(txt)+'</a>');
+}
+function showHome(msg){
+  show('home');
+  $('homeMsg').innerHTML=msg?`<div class="panel"><p class="muted">${msg}</p></div>`:'';
+}
+
+/* ============ Scanner: camera ============ */
+let scanner=null;
+$('btn-startscan').onclick=startScan;
+$('btn-stopscan').onclick=()=>{stopScan();};
+function startScan(){
+  if(scanner)return;
+  $('btn-startscan').style.display='none';$('btn-stopscan').style.display='block';
+  scanner=new Html5Qrcode('reader');
+  scanner.start({facingMode:'environment'},{fps:10,qrbox:250},
+    txt=>{stopScan();handleContent(txt);},()=>{}
+  ).catch(e=>{showHome('Nie udało się włączyć kamery: '+e);resetScanBtns();scanner=null;});
+}
+function stopScan(){
+  if(scanner){scanner.stop().then(()=>{scanner.clear();scanner=null;resetScanBtns();}).catch(()=>{scanner=null;resetScanBtns();});}
+  else resetScanBtns();
+}
+function resetScanBtns(){$('btn-startscan').style.display='block';$('btn-stopscan').style.display='none';}
+
+/* ============ Scanner: image file / clipboard ============ */
+async function scanImageFile(file){
+  stopScan();show('home');
+  $('homeMsg').innerHTML='<div class="panel"><p class="muted">⏳ Odczytuję kod QR…</p></div>';
+  const tmp=new Html5Qrcode('filereader');
+  try{const txt=await tmp.scanFile(file,false);handleContent(txt);}
+  catch(e){$('homeMsg').innerHTML='<div class="panel"><p class="muted">❌ Nie znaleziono kodu QR na tym zdjęciu. Użyj wyraźniejszego obrazu.</p></div>';}
+  finally{try{await tmp.clear();}catch(_){}}
+}
+$('btn-uploadqr').onclick=()=>$('qrFile').click();
+$('qrFile').onchange=e=>{const f=e.target.files[0];if(f)scanImageFile(f);e.target.value='';};
+$('btn-paste').onclick=async()=>{
+  if(navigator.clipboard&&navigator.clipboard.read){
+    try{const items=await navigator.clipboard.read();
+      for(const it of items){const type=it.types.find(t=>t.startsWith('image/'));
+        if(type){const blob=await it.getType(type);scanImageFile(new File([blob],'paste.png',{type}));return;}}
+      alert('W schowku nie ma obrazu. Skopiuj zdjęcie kodu QR (albo naciśnij Ctrl+V).');
+    }catch(e){alert('Przeglądarka zablokowała schowek. Naciśnij Ctrl+V, aby wkleić obraz.');}
+  }else alert('Naciśnij Ctrl+V, aby wkleić obraz.');
+};
+document.addEventListener('paste',e=>{
+  const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+  for(const it of items){if(it.type&&it.type.indexOf('image')===0){
+    const f=it.getAsFile();if(f){e.preventDefault();scanImageFile(f);return;}}}
+});
+
+/* ============ Back ============ */
+$('btn-back').onclick=()=>{clearInterval(ytWatch);if(ytPlayer){try{ytPlayer.stopVideo();}catch(e){}}showHome('');};
+
+/* ============ Open via direct link (QR pointing here) ============ */
+function checkHash(){
+  if(location.hash && /\bv=/.test(location.hash)){
+    const p=parseParams(location.hash);
+    if(p.v){playCard(cardFromParams(p));return true;}
+  }
+  return false;
+}
+window.addEventListener('hashchange',checkHash);
+checkHash();
+</script>
+
+<!-- ===== PWA: instalacja + service worker ===== -->
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+let fgPrompt=null;
+function fgShowInstall(){
+  if(document.getElementById('fg-install'))return;
+  const b=document.createElement('button');
+  b.id='fg-install'; b.textContent='⬇️ Zainstaluj Filmglish';
+  b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;'
+    +'background:linear-gradient(135deg,#5b8cff,#ff5b8c);color:#fff;border:none;border-radius:30px;'
+    +'padding:13px 24px;font-size:15px;font-weight:700;cursor:pointer;'
+    +'box-shadow:0 8px 26px rgba(0,0,0,.4);font-family:inherit;width:auto';
+  b.onclick=async()=>{ if(!fgPrompt)return; fgPrompt.prompt(); await fgPrompt.userChoice; fgPrompt=null; b.remove(); };
+  document.body.appendChild(b);
+}
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); fgPrompt=e; fgShowInstall(); });
+window.addEventListener('appinstalled',()=>{ const b=document.getElementById('fg-install'); if(b)b.remove(); fgPrompt=null; });
+(function(){
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+  if(isIOS && !standalone && !localStorage.getItem('fg-ios-hint')){
+    const d=document.createElement('div');
+    d.style.cssText='position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;'
+      +'background:#1a1f3a;color:#e8ecff;border:1px solid #2c345e;border-radius:14px;padding:14px 16px;'
+      +'font-size:14px;box-shadow:0 8px 26px rgba(0,0,0,.45);font-family:inherit';
+    d.innerHTML='📲 <b>Dodaj Filmglish do ekranu początkowego:</b> dotknij <b>Udostępnij</b> '
+      +'a następnie <b>„Do ekranu początkowego”</b>. <span style="text-decoration:underline;cursor:pointer">Ukryj</span>';
+    d.querySelector('span').onclick=()=>{ localStorage.setItem('fg-ios-hint','1'); d.remove(); };
+    document.body.appendChild(d);
+  }
+})();
+</script>
+</body>
+</html>

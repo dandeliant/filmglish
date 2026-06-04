@@ -1,0 +1,17 @@
+{
+  "name": "Filmglish — graj i ucz się angielskiego",
+  "short_name": "Filmglish",
+  "description": "Skanuj karty QR, oglądaj krótkie fragmenty filmów i ćwicz mówienie po angielsku. Gra od Angielskiwnet.",
+  "lang": "pl",
+  "start_url": "player.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1226",
+  "theme_color": "#5b8cff",
+  "categories": ["education", "games"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
