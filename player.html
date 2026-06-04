@@ -48,9 +48,37 @@
   .center{text-align:center}
   .big{font-size:17px;padding:16px}
   .logo{font-size:40px}
+  /* ===== Splash ===== */
+  #splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:radial-gradient(circle at 30% 15%,#2a1f45,#0f1226);transition:opacity .5s ease}
+  #splash.hide{opacity:0;pointer-events:none}
+  #splash .s-logo{filter:drop-shadow(0 10px 30px rgba(91,140,255,.55));animation:pop .9s cubic-bezier(.2,.9,.3,1.2)}
+  #splash h1{margin:16px 0 2px;font-size:34px;font-weight:800;
+    background:linear-gradient(135deg,#8fb0ff,#ff8fb0);-webkit-background-clip:text;background-clip:text;color:transparent}
+  #splash p{margin:0;color:#9aa3c7;font-size:13px}
+  @keyframes pop{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
 </style>
 </head>
 <body>
+<div id="splash">
+  <span class="s-logo">
+    <svg viewBox="0 0 64 64" width="92" height="92" aria-hidden="true">
+      <defs><linearGradient id="fgSplash" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#5b8cff"/><stop offset="1" stop-color="#ff5b8c"/>
+      </linearGradient></defs>
+      <rect x="3" y="3" width="58" height="58" rx="16" fill="url(#fgSplash)"/>
+      <g fill="#fff">
+        <rect x="11" y="14" width="5" height="6" rx="1" opacity=".6"/>
+        <rect x="11" y="29" width="5" height="6" rx="1" opacity=".6"/>
+        <rect x="11" y="44" width="5" height="6" rx="1" opacity=".6"/>
+        <path d="M27 20 L47 32 L27 44 Z"/>
+      </g>
+    </svg>
+  </span>
+  <h1>Filmglish</h1>
+  <p>od Angielskiwnet</p>
+</div>
+<script>window.addEventListener('load',function(){setTimeout(function(){var s=document.getElementById('splash');if(s){s.classList.add('hide');setTimeout(function(){s.remove();},600);}},1100);});</script>
 <header>
   <div class="brand">
     <span class="brand-logo">
