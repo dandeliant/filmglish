@@ -29,6 +29,9 @@
   .tab{flex:1;text-align:center;padding:12px;border-radius:12px;background:var(--panel);
     border:1px solid var(--line);color:var(--muted);font-weight:700;cursor:pointer;font-size:15px}
   .tab.active{background:linear-gradient(135deg,#5b8cff,#ff5b8c);color:#fff;border-color:transparent}
+  .mutebtn{flex:0 0 auto;width:auto;margin:0;padding:12px 14px;border-radius:12px;background:var(--panel);
+    border:1px solid var(--line);color:var(--muted);font-size:18px;line-height:1}
+  .mutebtn.on{color:#ff5b8c}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
   .view{display:none} .view.active{display:block}
   button{cursor:pointer;border:none;border-radius:12px;padding:13px 16px;font-size:15px;
@@ -119,6 +122,7 @@
   <div class="tabs">
     <div class="tab active" data-view="quiz">🎬 Quiz</div>
     <div class="tab" data-view="board">🏁 Plansza</div>
+    <button class="mutebtn" id="muteBtn" title="Dźwięk zwycięstwa">🔊</button>
   </div>
 
   <!-- ===== QUIZ ===== -->
@@ -247,7 +251,9 @@ lastWinner=(players.find(p=>p.pos>=FIELDS)||{}).name||null; // nie zapowiadaj po
 
 /* ---------- Dźwięk zwycięstwa ---------- */
 let audioCtx=null;
+let muted=localStorage.getItem('fg-muted')==='1';
 function beep(freq,start,dur,type){
+  if(muted)return;
   try{
     if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
     const o=audioCtx.createOscillator(),g=audioCtx.createGain();
@@ -261,6 +267,7 @@ function beep(freq,start,dur,type){
 }
 function fanfare(){ [523.25,659.25,783.99,1046.5].forEach((f,i)=>beep(f,i*0.16,0.32,'triangle')); }
 function announceWinner(name){
+  if(muted)return;
   fanfare();
   try{ if(window.speechSynthesis){
     const u=new SpeechSynthesisUtterance(name+' wygrywa!');
@@ -495,8 +502,21 @@ $('btn-check').onclick=()=>{
 };
 $('btn-next').onclick=nextQuestion;
 
+/* ---------- wyciszenie ---------- */
+function renderMute(){
+  const b=$('muteBtn');if(!b)return;
+  b.textContent=muted?'🔇':'🔊';
+  b.classList.toggle('on',muted);
+  b.title=muted?'Dźwięk wyłączony — kliknij, aby włączyć':'Dźwięk zwycięstwa — kliknij, aby wyciszyć';
+}
+$('muteBtn').onclick=()=>{
+  muted=!muted;localStorage.setItem('fg-muted',muted?'1':'0');
+  if(muted){try{speechSynthesis.cancel();}catch(e){}}
+  renderMute();
+};
+
 /* ---------- init ---------- */
-renderPlayers();renderBoard();renderTurn();
+renderMute();renderPlayers();renderBoard();renderTurn();
 
 /* ---------- PWA service worker ---------- */
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
