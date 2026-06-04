@@ -60,6 +60,9 @@
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   input[type=text]{flex:1;min-width:0;padding:12px;border-radius:12px;border:1px solid var(--line);
     background:#0c0f1f;color:var(--text);font-size:15px}
+  select{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0c0f1f;
+    color:var(--text);font-size:15px;font-weight:600}
+  .setup label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted);font-weight:700;flex:1}
   /* players list */
   .plist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
   .pl{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);
@@ -116,6 +119,18 @@
   <section class="view active" id="view-quiz">
     <div class="panel">
       <div class="turn" id="turnBar"><span class="muted">Tryb solo — dodaj graczy w zakładce „Plansza”, aby liczyć punkty.</span></div>
+    </div>
+
+    <div class="panel setup">
+      <div class="row" style="gap:10px">
+        <label>Zestaw kart
+          <select id="sel-deck"><option value="*">🎲 Wszystkie</option></select>
+        </label>
+        <label>Poziom
+          <select id="sel-level"><option value="*">Wszystkie</option></select>
+        </label>
+      </div>
+      <p class="muted" id="poolInfo" style="margin:8px 0 0"></p>
     </div>
 
     <div class="panel" id="quizCard">
@@ -177,9 +192,34 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 
 /* ---------- Deck ---------- */
 let deck=[];
-fetch('deck.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{deck=d;nextQuestion();})
+let filterDeck=localStorage.getItem('fg-deck')||'*';
+let filterLevel=localStorage.getItem('fg-level')||'*';
+fetch('deck.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{deck=d;populateFilters();nextQuestion();})
   .catch(()=>{ $('quizCard').innerHTML='<p class="muted">Nie udało się wczytać talii (deck.json). '
     +'Uruchom aplikację przez serwer (plik „Uruchom Filmglish.bat”) lub otwórz wersję online.</p>'; });
+
+function setKey(c){return (c.deck&&c.deck.trim())||c.mode||'Inne';}
+function filteredDeck(){
+  return deck.filter(c=>(filterDeck==='*'||setKey(c)===filterDeck)
+    &&(filterLevel==='*'||(c.level||'')===filterLevel));
+}
+function fillSelect(sel,values,current){
+  [...sel.querySelectorAll('option:not(:first-child)')].forEach(o=>o.remove());
+  values.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);});
+  sel.value=[...sel.options].some(o=>o.value===current)?current:'*';
+}
+function populateFilters(){
+  const decks=[...new Set(deck.map(setKey))].sort();
+  const levels=[...new Set(deck.map(c=>c.level).filter(Boolean))].sort();
+  fillSelect($('sel-deck'),decks,filterDeck); filterDeck=$('sel-deck').value;
+  fillSelect($('sel-level'),levels,filterLevel); filterLevel=$('sel-level').value;
+}
+function updatePoolInfo(pool){
+  const n=pool.length;
+  $('poolInfo').textContent=n?('Pytania w tym zestawie: '+n):'Brak kart pasujących do filtra — zmień zestaw lub poziom.';
+}
+$('sel-deck').onchange=e=>{filterDeck=e.target.value;localStorage.setItem('fg-deck',filterDeck);nextQuestion();};
+$('sel-level').onchange=e=>{filterLevel=e.target.value;localStorage.setItem('fg-level',filterLevel);nextQuestion();};
 
 function parseYouTube(url){
   if(!url) return null; let id=null,t=0;
@@ -292,7 +332,17 @@ function shuffledOpts(card){
 }
 function nextQuestion(){
   if(!deck.length)return;
-  cur=deck[Math.floor(Math.random()*deck.length)];
+  const pool=filteredDeck();
+  updatePoolInfo(pool);
+  if(!pool.length){
+    cur=null;clearInterval(ytWatch);
+    $('gapLine').textContent='—';$('opts').innerHTML='';$('reveal').innerHTML='';
+    $('btn-check').style.display='none';$('btn-hint').style.display='none';$('btn-next').style.display='none';
+    $('btn-replay').style.display='none';
+    const fw=$('filmWrap');fw.className='player noFilm';fw.innerHTML='🃏 Pusty zestaw — wybierz inny powyżej.';
+    return;
+  }
+  cur=pool[Math.floor(Math.random()*pool.length)];
   openMode=!hasQuiz(cur);
   curOpts=openMode?[]:shuffledOpts(cur);selIdx=-1;usedHint=false;answered=false;
   renderTurn();
