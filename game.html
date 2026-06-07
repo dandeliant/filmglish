@@ -205,7 +205,12 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 let deck=[];
 let filterDeck=localStorage.getItem('fg-deck')||'*';
 let filterLevel=localStorage.getItem('fg-level')||'*';
-fetch('deck.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{deck=d;populateFilters();nextQuestion();})
+fetch('decks.json',{cache:'no-store'}).then(r=>r.ok?r.json():['deck.json']).catch(()=>['deck.json'])
+  .then(files=>Promise.all((Array.isArray(files)&&files.length?files:['deck.json'])
+    .map(f=>fetch(f,{cache:'no-store'}).then(r=>r.json()).catch(()=>[]))))
+  .then(arrs=>{ deck=[].concat(...arrs);
+    if(!deck.length)throw new Error('empty');
+    populateFilters();nextQuestion(); })
   .catch(()=>{ $('quizCard').innerHTML='<p class="muted">Nie udało się wczytać talii (deck.json). '
     +'Uruchom aplikację przez serwer (plik „Uruchom Filmglish.bat”) lub otwórz wersję online.</p>'; });
 

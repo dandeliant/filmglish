@@ -1,11 +1,13 @@
 /* Filmglish — service worker (PWA) */
-const CACHE = 'filmglish-v8';
+const CACHE = 'filmglish-v9';
 const ASSETS = [
   './',
   'index.html',
   'player.html',
   'game.html',
   'deck.json',
+  'decks.json',
+  'deck-cytaty.json',
   'landing.html',
   'manifest.webmanifest',
   'icon-192.png',
@@ -31,8 +33,8 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // YouTube/CDN zawsze z sieci
-  // deck.json — najpierw sieć (świeże filmy/czasy), cache jako zapas offline.
-  if (url.pathname.endsWith('deck.json')) {
+  // talie (deck*.json / decks.json) — najpierw sieć (świeże filmy/czasy), cache jako zapas offline.
+  if (/(?:^|\/)decks?[^/]*\.json$/.test(url.pathname)) {
     e.respondWith(
       fetch(req).then(res => {
         const copy = res.clone();
